@@ -5,19 +5,39 @@ export default function Waitlist() {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
+
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 800));
-    setSubmitted(true);
-    setLoading(false);
+    setError("");
+
+    try {
+      const res = await fetch("/api/waitlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        setError(data.error || "Something went wrong. Please try again.");
+        return;
+      }
+
+      setSubmitted(true);
+    } catch {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <section id="waitlist" className="py-24 px-6 relative overflow-hidden">
-      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-accent/8 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full blur-[100px] pointer-events-none" style={{ background: "rgba(124,58,237,0.08)" }} />
 
       <div className="relative z-10 max-w-3xl mx-auto text-center">
         <p className="text-accent-light text-sm font-semibold uppercase tracking-widest mb-3">
@@ -62,6 +82,10 @@ export default function Waitlist() {
               {loading ? "Joining..." : "Join Waitlist"}
             </button>
           </form>
+        )}
+
+        {error && (
+          <p className="mt-3 text-sm text-red-400">{error}</p>
         )}
 
         <p className="mt-4 text-xs text-slate-600">
